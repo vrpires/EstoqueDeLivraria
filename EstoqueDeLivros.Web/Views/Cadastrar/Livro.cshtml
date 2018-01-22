@@ -1,0 +1,267 @@
+﻿@model List<EstoqueDeLivros.Web.Models.LivroViewModel>
+@{
+    ViewBag.Title = "Cadastro de Livro";
+}
+<style>
+    #grid-cadastro > thead > tr th:nth-child(2) {
+        width: 110px;
+    }
+
+    #grid-cadastro > thead > tr th:nth-child(3) {
+        width: 200px;
+    }
+
+    #cadastro {
+        width: 70%;
+        margin: 0 auto;
+    }
+
+    #cadastro-cabecalho {
+        border-bottom: 1px #dddddd solid;
+    }
+
+    #cadastro-conteudo {
+        margin-top: 20px;
+    }
+
+    #cabecalho-grid {
+        margin-bottom: 20px;
+    }
+</style>
+
+<div id="cadastro">
+    <section id="cadastro-cabecalho">
+        <h1>@ViewBag.Title</h1>
+    </section>
+    <section id="cadastro-conteudo">
+        <div id="cabecalho-grid" class="row">
+            <div class="col-md-12">
+                <a id="btn-add" class="btn btn-success" role="button"><i class="glyphicon glyphicon-plus"></i> Incluir</a>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <table id="grid-cadastro" class="table table-bordered table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th>Autor(a)</th>
+                            <th>Quantidade</th>
+                            <th>Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                        <tr data-id="@item.Id">
+                            <td>@item.Nome</td>
+                            <td>@item.Autor</td>
+                            <td>@item.Quantidade</td>
+                            <td>
+                                <a class="btn btn-primary btn-editar" role="button"><i class="glyphicon glyphicon-pencil"></i> Editar</a>
+                                <a class="btn btn-danger btn-excluir" role="button"><i class="glyphicon glyphicon-trash"></i> Excluir</a>
+                            </td>
+                        </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+
+@Html.Hidden("id-cadastro")
+
+<div id="modal-cadastro" class="form-horizontal invisivel" role="dialog">
+    <div id="msg-mensagem-aviso" class="text-danger invisivel"></div>
+    <fieldset>
+        <div class="row">
+            <div class="form-group">
+                @Html.Label("txt_nome", "Nome", new { @class = "col-md-3 control-label" })
+                <div class="col-md-12">
+                    @Html.TextBox("txt_nome", null, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.Label("txt_autor", "Autor", new { @class = "col-md-3 control-label" })
+                <div class="col-md-12">
+                    @Html.TextBox("txt_autor", null, new { @class = "form-control" })
+                </div>
+            </div>
+
+            <div class="form-group">
+                @Html.Label("txt_quantidade", "Quantidade", new { @class = "col-md-3 control-label" })
+                <div class="col-md-12">
+                    @Html.TextBox("txt_quantidade", null, new { @class = "form-control" })
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="form-group">
+                    <div class="modal-footer">
+                        <a id="btn-sair" class="btn btn-default" role="button" data-dismiss="modal"><i class="glyphicon glyphicon-remove"></i> Sair</a>
+                        <a id="btn-confirmar" class="btn btn-primary" role="button"><i class="glyphicon glyphicon-ok"></i> Salvar</a>
+                    </div>
+
+                    <div id="msg-aviso" class="alert alert-warning invisivel">
+                        Falta preencher os campos acima.
+                    </div>
+
+                    <div id="msg-erro" class="alert alert-danger invisivel">
+                        Ops! Falha!
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </fieldset>
+</div>
+
+@section Scripts{
+<script>
+        function acessar_form(infos) {
+            $('#id-cadastro').val(infos.Id);
+            $('#txt_nome').val(infos.Nome);
+            $('#txt_autor').val(infos.Autor);
+            $('#txt_quantidade').val(infos.Quantidade);
+
+            var modalCadastro = $('#modal-cadastro');
+
+            $('#msg-mensagem-aviso').empty();
+            $('#msg-aviso').hide();
+            $('#msg-mensagem-aviso').hide();
+            $('#msg-erro').hide();
+
+            bootbox.dialog({
+                title: '@ViewBag.Title',
+                message: modalCadastro
+            })
+            .on('shown.bs.modal', function () {
+                modalCadastro.show(0, function () {
+                    $('#txt_nome').focus();
+                });
+                })
+            .on('hidden.bs.modal', function () {
+                modalCadastro.hide().appendTo('body');
+            });
+        }
+
+        function addLinhaGrid(infos) {
+
+            var retorno =
+                '<tr data-id=' + infos.Id + '>' +
+                '<td>' + infos.Nome + '</td>' +
+                '<td>' + infos.Autor + '</td>' +
+                '<td>' + infos.Quantidade + '</td>'+
+                '<td>' +
+                '<a class="btn btn-primary btn-editar" role="button" style="margin-right:3px"><i class="glyphicon glyphicon-pencil"></i> Editar</a>' +
+                '<a class="btn btn-danger btn-excluir" role="button"><i class="glyphicon glyphicon-trash"></i> Excluir</a>' +
+                '</td>' +
+                '</tr>';
+
+            return retorno;
+        }
+
+        $(document).on('click', '#btn-add', function () {
+            acessar_form({ Id: 0, Nome: '', Autor: '', Quantidade: 0 });
+        })
+            .on('click', '.btn-editar', function () {
+                var btn = $(this),
+                    id = btn.closest('tr').attr('data-id'),
+                    url = '@Url.Action("EditarLivro", "Cadastrar")',
+                    param = { 'id': id };
+
+                $.post(url, param, function (response) {
+                    if (response) {
+                        acessar_form(response);
+                    }
+                });
+            })
+            .on('click', '.btn-excluir', function () {
+                var btn = $(this),
+                    tr = btn.closest('tr'),
+                    id = tr.attr('data-id'),
+                    url = '@Url.Action("ExcluirLivro", "Cadastrar")',
+                    param = { 'id': id };
+
+                bootbox.confirm({
+                    message: "Você tem certeza que deseja excluir esse livro?",
+                    buttons: {
+                        confirm: {
+                            label: 'Sim',
+                            className: 'btn-success'
+                        },
+                        cancel: {
+                            label: 'Não',
+                            className: 'btn-danger'
+                        }
+                    },
+                    callback: function (result) {
+                        if (result) {
+                            $.post(url, param, function (response) {
+                                if (response) {
+                                    tr.remove();
+                                }
+                            });
+                        }
+                    }
+                });
+            })
+            .on('click', '#btn-confirmar', function () {
+                var btn = $(this),
+                    url = '@Url.Action("SalvarLivro", "Cadastrar")',
+                    param = {
+                        Id: $('#id-cadastro').val(),
+                        Nome: $('#txt_nome').val(),
+                        Autor: $('#txt_autor').val(),
+                        Quantidade: $('#txt_quantidade').val()
+                    };
+
+                $.post(url, param, function (response) {
+                    if (response.Result == "OK!") {
+                        if (param.Id == 0) {
+                            param.Id = response.IdSalvo;
+                            var table = $('#grid-cadastro').find('tbody'),
+                                linha = addLinhaGrid(param);
+
+                            table.append(linha);
+                        }
+                        else {
+                            var linha = $('#grid-cadastro').find('tr[data-id=' + param.Id + ']').find('td');
+                            linha
+                                .eq(0).html(param.Nome).end()
+                                .eq(1).html(param.Autor).end()
+                                .eq(2).html(param.Quantidade).end();
+                        }
+
+                        $('#modal-cadastro').parents('.bootbox').modal('hide');
+                    }
+                    else if (response.Result == "ERRO!") {
+                        $('#msg-aviso').hide();
+                        $('#msg-mensagem-aviso').hide();
+                        $('#msg-erro').show();
+                    }
+                    else if (response.Result == "AVISO!") {
+                        $('#msg-mensagem-aviso').html(formatMsgAviso(response.Mensagens));
+                        $('#msg-aviso').show();
+                        $('#msg-mensagem-aviso').show();
+                        $('#msg-erro').hide();
+                    }
+                });
+        });
+
+        function formatMsgAviso(mensagens) {
+            var ret = '';
+
+            for (var i = 0; i < mensagens.length; i++) {
+
+                ret += '<li>' + mensagens[i] + '</li>'
+            }
+
+            return '<ul>' + ret + '</ul>';
+        }
+</script>
+}
